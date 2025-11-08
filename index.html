@@ -93,9 +93,9 @@ window.Quarto = {
   <li><a href="#modified-strategy-bet-25-of-the-balance-each-year" id="toc-modified-strategy-bet-25-of-the-balance-each-year" class="nav-link" data-scroll-target="#modified-strategy-bet-25-of-the-balance-each-year"><span class="header-section-number">1.5</span> Modified strategy – bet 25% of the balance each year</a>
   <ul class="collapse">
   <li><a href="#overlay-of-the-two-strategies" id="toc-overlay-of-the-two-strategies" class="nav-link" data-scroll-target="#overlay-of-the-two-strategies"><span class="header-section-number">1.5.1</span> Overlay of the two strategies</a></li>
-  <li><a href="#side-by-side-strategy-comparison" id="toc-side-by-side-strategy-comparison" class="nav-link" data-scroll-target="#side-by-side-strategy-comparison"><span class="header-section-number">1.5.2</span> Side-by-side strategy comparison</a></li>
+  <li><a href="#sidebyside-strategy-comparison" id="toc-sidebyside-strategy-comparison" class="nav-link" data-scroll-target="#sidebyside-strategy-comparison"><span class="header-section-number">1.5.2</span> Side‑by‑side strategy comparison</a></li>
   </ul></li>
-  <li><a href="#kelly-style-reflection" id="toc-kelly-style-reflection" class="nav-link" data-scroll-target="#kelly-style-reflection"><span class="header-section-number">1.6</span> Kelly-style reflection</a></li>
+  <li><a href="#kellystyle-reflection" id="toc-kellystyle-reflection" class="nav-link" data-scroll-target="#kellystyle-reflection"><span class="header-section-number">1.6</span> Kelly‑style reflection</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -129,15 +129,15 @@ window.Quarto = {
 
 <section id="overview" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Overview</h1>
-<p>This project studies a coin-flip investment game played once per year from age 20 to age 75.</p>
+<p>This project explores a coin‑flip investment game played once per year from age 20 to age 75.</p>
 <ul>
-<li>Starting balance at age 20: <strong>$30,000</strong><br>
+<li>Starting balance at age <strong>20</strong>: <strong>$30,000</strong><br>
 </li>
-<li>Each year: flip a fair coin
+<li>Each year until age <strong>75</strong>: flip a fair coin
 <ul>
-<li>Heads → multiply by <strong>1.5</strong> (50% gain)<br>
+<li>Heads → multiply the account by <strong>1.5</strong> (50% gain)<br>
 </li>
-<li>Tails → multiply by <strong>0.6</strong> (40% loss)</li>
+<li>Tails → multiply the account by <strong>0.6</strong> (40% loss)</li>
 </ul></li>
 </ul>
 <p>I compare two ways to play:</p>
@@ -146,30 +146,30 @@ window.Quarto = {
 </li>
 <li><strong>25% strategy</strong> – only 25% of the balance is exposed each year; the rest sits out that year.</li>
 </ol>
-<p>The guiding questions:</p>
+<p>The main questions:</p>
 <ul>
-<li>How wild can one lifetime path become from age 20 to 75?<br>
+<li>What does a single lifetime path look like from 20 to 75?<br>
 </li>
-<li>Across many simulated lifetimes, what does the distribution of final balances look like?<br>
+<li>If many people play this game, what does the distribution of final balances look like?<br>
 </li>
 <li>How often do we retire with more than the original $30,000?<br>
 </li>
-<li>How does the 25% strategy change both risk and upside?</li>
+<li>How does the 25% strategy change both the risk and the upside?</li>
 </ul>
 <section id="expected-value-after-one-flip" class="level2" data-number="1.1">
 <h2 data-number="1.1" class="anchored" data-anchor-id="expected-value-after-one-flip"><span class="header-section-number">1.1</span> Expected value after one flip</h2>
-<p>Imagine the very first year at age 20, right after we invest the $30,000.</p>
+<p>Picture the very first year, right after investing the $30,000 at age 20.</p>
 <p>Outcomes after that first coin flip:</p>
 <ul>
 <li>Heads: the account jumps to $45,000 (probability 0.5)<br>
 </li>
-<li>Tails: the account drops to $18,000 (probability 0.5)</li>
+<li>Tails: the account falls to $18,000 (probability 0.5)</li>
 </ul>
 <p>The expected value after one flip is</p>
 <p>[ [W_1] = 0.5 000 + 0.5 000 = 31{,}500. ]</p>
 <p>Gain in expected value: <strong>$1,500</strong><br>
-Gain as a percentage of the buy-in: <strong>5%</strong></p>
-<p>So, based on a single step, the game promises about a <strong>5% boost</strong> to wealth. The tension in this project is that we keep playing this game <strong>55 years in a row</strong>, and compounding can amplify both good and bad stretches.</p>
+Gain as a percentage of the buy‑in: <strong>5%</strong></p>
+<p>So, looked at in isolation, the game promises about a <strong>5% boost</strong> to wealth after one year. The catch is that we keep flipping this coin every year for <strong>55 years</strong>, and compounding can amplify both winning streaks and losing streaks.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -195,7 +195,7 @@ Gain as a percentage of the buy-in: <strong>5%</strong></p>
 </section>
 <section id="one-simulated-path-from-age-20-to-75-100-strategy" class="level2" data-number="1.2">
 <h2 data-number="1.2" class="anchored" data-anchor-id="one-simulated-path-from-age-20-to-75-100-strategy"><span class="header-section-number">1.2</span> One simulated path from age 20 to 75 (100% strategy)</h2>
-<p>To get a feel for the risk, I start with one sample lifetime where the entire account is exposed every single year.</p>
+<p>To get an intuitive feel for the risk, I start with one sample lifetime where the <strong>entire account is exposed every single year</strong>.</p>
 <div id="cell-single-path" class="cell" data-fig-height="4.5" data-fig-width="8" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div id="single-path" class="quarto-figure quarto-figure-center anchored">
@@ -212,11 +212,11 @@ Gain as a percentage of the buy-in: <strong>5%</strong></p>
 </div>
 </div>
 <p><strong>Story of this path.</strong><br>
-The account spends decades drifting up and down, often sitting below the original $30,000 line. By age 75 this run ends far from a “rich retirement”. A single unlucky cluster of tails late in life can erase years of earlier wins, which is exactly what makes the 100% strategy so fragile.</p>
+The account wanders around for decades, sometimes above the starting level and often below it. A bad cluster of tails late in life can wipe out years of earlier wins. In this particular run, the final balance at age 75 is much lower than $30,000, which already suggests that “bet everything every year” is a dangerous way to fund retirement.</p>
 </section>
 <section id="simulations-distribution-for-the-100-strategy" class="level2" data-number="1.3">
 <h2 data-number="1.3" class="anchored" data-anchor-id="simulations-distribution-for-the-100-strategy"><span class="header-section-number">1.3</span> 100 simulations – distribution for the 100% strategy</h2>
-<p>One path is a story; 100 paths form a distribution. Here I simulate <strong>100 lifetimes</strong> from age 20 to 75 where the full balance is at risk each year and record the final balance at age 75.</p>
+<p>One lifetime shows how things <em>can</em> go. To see what usually happens, I simulate <strong>100 independent lifetimes</strong> from age 20 to 75 with the 100% strategy and record the final balance at age 75.</p>
 <div id="cell-hist-full" class="cell" data-fig-height="4.8" data-fig-width="8" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div id="hist-full" class="quarto-figure quarto-figure-center anchored">
@@ -229,81 +229,180 @@ The account spends decades drifting up and down, often sitting below the origina
 </div>
 <section id="summary-tables-for-the-100-strategy" class="level3" data-number="1.3.1">
 <h3 data-number="1.3.1" class="anchored" data-anchor-id="summary-tables-for-the-100-strategy"><span class="header-section-number">1.3.1</span> Summary tables for the 100% strategy</h3>
-<div id="cell-full-tables" class="cell" data-tbl-cap="Distribution statistics for the 100% strategy (100 simulated lifetimes)." data-execution_count="6">
-<div id="full-tables" class="cell-output cell-output-display" data-execution_count="6">
-<pre><code>(&lt;pandas.io.formats.style.Styler at 0x2659950e900&gt;,
- &lt;pandas.io.formats.style.Styler at 0x2659cbe38f0&gt;)</code></pre>
-</div>
-</div>
-<p><strong>Reading the picture.</strong><br>
-The histogram is very skewed: most lifetimes end in the red, with a small cluster of enormous wins dragging the mean to the right. The median, lower percentiles, and the probability in the table make it clear that a “typical” player does not retire happy with this approach.</p>
-</section>
-</section>
-<section id="probability-that-the-balance-exceeds-30000-at-age-75" class="level2" data-number="1.4">
-<h2 data-number="1.4" class="anchored" data-anchor-id="probability-that-the-balance-exceeds-30000-at-age-75"><span class="header-section-number">1.4</span> Probability that the balance exceeds $30,000 at age 75</h2>
-<p>Here I zoom in on one question: <em>starting at age 20, what fraction of lifetimes end at or above $30,000 by age 75 when we always bet 100%?</em></p>
-<div class="cell" data-tbl-cap="Probability that the final balance is at or above $30,000 under the 100% strategy." data-execution_count="7">
-<div id="prob-table" class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell" data-tbl-cap="Distribution statistics for the 100% strategy (100 simulated lifetimes)." data-execution_count="7">
+<div id="full-summary-table" class="cell-output cell-output-display" data-execution_count="7">
 <style type="text/css">
-#T_c40ae th {
-  background-color: #c62828;
+#T_655d8 th {
+  background-color: #1976d2;
   color: white;
   font-weight: bold;
   padding: 6px;
 }
-#T_c40ae tbody td {
+#T_655d8 tbody td {
   padding: 6px;
-}
-#T_c40ae tbody tr:nth-child(even) {
-  background-color: #ffebee;
 }
 </style>
 
-<table id="T_c40ae" class="caption-top table table-sm table-striped small">
-<caption>Probability that the final balance is at or above $30,000 under the 100% strategy.</caption>
+<table id="T_655d8" class="caption-top table table-sm table-striped small">
+<caption>Distribution statistics for the 100% strategy (100 simulated lifetimes).</caption>
 <thead>
 <tr class="header">
-<th id="T_c40ae_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Metric</th>
-<th id="T_c40ae_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Value</th>
+<th id="T_655d8_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Statistic</th>
+<th id="T_655d8_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Value</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_c40ae_row0_col0" class="data row0 col0">Number of simulated lifetimes</td>
-<td id="T_c40ae_row0_col1" class="data row0 col1">100</td>
+<td id="T_655d8_row0_col0" class="data row0 col0">Count</td>
+<td id="T_655d8_row0_col1" class="data row0 col1">100</td>
 </tr>
 <tr class="even">
-<td id="T_c40ae_row1_col0" class="data row1 col0">Years per lifetime (coin flips)</td>
-<td id="T_c40ae_row1_col1" class="data row1 col1">55</td>
+<td id="T_655d8_row1_col0" class="data row1 col0">Mean final balance</td>
+<td id="T_655d8_row1_col1" class="data row1 col1">$86,910.77</td>
 </tr>
 <tr class="odd">
-<td id="T_c40ae_row2_col0" class="data row2 col0">Lifetimes with final balance ≥ $30,000</td>
-<td id="T_c40ae_row2_col1" class="data row2 col1">16</td>
+<td id="T_655d8_row2_col0" class="data row2 col0">Median final balance</td>
+<td id="T_655d8_row2_col1" class="data row2 col1">$1,046.70</td>
 </tr>
 <tr class="even">
-<td id="T_c40ae_row3_col0" class="data row3 col0">Probability (decimal)</td>
-<td id="T_c40ae_row3_col1" class="data row3 col1">0.160</td>
+<td id="T_655d8_row3_col0" class="data row3 col0">Minimum</td>
+<td id="T_655d8_row3_col1" class="data row3 col1">$0.27</td>
 </tr>
 <tr class="odd">
-<td id="T_c40ae_row4_col0" class="data row4 col0">Probability (percentage)</td>
-<td id="T_c40ae_row4_col1" class="data row4 col1">16.0%</td>
+<td id="T_655d8_row4_col0" class="data row4 col0">Maximum</td>
+<td id="T_655d8_row4_col1" class="data row4 col1">$3,992,825.57</td>
 </tr>
 <tr class="even">
-<td id="T_c40ae_row5_col0" class="data row5 col0">Probability (final balance &lt; $30,000)</td>
-<td id="T_c40ae_row5_col1" class="data row5 col1">0.840 (84.0%)</td>
+<td id="T_655d8_row5_col0" class="data row5 col0">Standard deviation</td>
+<td id="T_655d8_row5_col1" class="data row5 col1">$454,873.69</td>
+</tr>
+<tr class="odd">
+<td id="T_655d8_row6_col0" class="data row6 col0">P(final ≥ $30,000)</td>
+<td id="T_655d8_row6_col1" class="data row6 col1">0.160 (16.0%)</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>In words: only a minority of lifetimes end above the starting $30,000, even though each single flip has positive expected value.</p>
+<div class="cell" data-tbl-cap="Percentiles of the final balance distribution under the 100% strategy." data-execution_count="8">
+<div id="full-percentile-table" class="cell-output cell-output-display" data-execution_count="8">
+<style type="text/css">
+#T_11c3e th {
+  background-color: #2e7d32;
+  color: white;
+  font-weight: bold;
+  padding: 6px;
+}
+#T_11c3e tbody td {
+  padding: 6px;
+}
+#T_11c3e tbody tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+</style>
+
+<table id="T_11c3e" class="caption-top table table-sm table-striped small">
+<caption>Percentiles of the final balance distribution under the 100% strategy.</caption>
+<thead>
+<tr class="header">
+<th id="T_11c3e_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Percentile</th>
+<th id="T_11c3e_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Final balance ($)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td id="T_11c3e_row0_col0" class="data row0 col0">10th</td>
+<td id="T_11c3e_row0_col1" class="data row0 col1">$62.97</td>
+</tr>
+<tr class="even">
+<td id="T_11c3e_row1_col0" class="data row1 col0">25th</td>
+<td id="T_11c3e_row1_col1" class="data row1 col1">$167.47</td>
+</tr>
+<tr class="odd">
+<td id="T_11c3e_row2_col0" class="data row2 col0">50th</td>
+<td id="T_11c3e_row2_col1" class="data row2 col1">$1,046.70</td>
+</tr>
+<tr class="even">
+<td id="T_11c3e_row3_col0" class="data row3 col0">75th</td>
+<td id="T_11c3e_row3_col1" class="data row3 col1">$6,541.85</td>
+</tr>
+<tr class="odd">
+<td id="T_11c3e_row4_col0" class="data row4 col0">90th</td>
+<td id="T_11c3e_row4_col1" class="data row4 col1">$47,019.51</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>Reading the picture.</strong><br>
+The histogram and tables tell the same story: the distribution is extremely skewed. A few lucky lifetimes end with very large balances, which pull the mean to the right. But the median and the lower percentiles sit well below $30,000. For most players, the 100% strategy does not lead to a happy retirement.</p>
+</section>
+</section>
+<section id="probability-that-the-balance-exceeds-30000-at-age-75" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="probability-that-the-balance-exceeds-30000-at-age-75"><span class="header-section-number">1.4</span> Probability that the balance exceeds $30,000 at age 75</h2>
+<p>Now I zoom in on a single quantity: starting at age 20, what fraction of lifetimes end at or above $30,000 by age 75 when we always bet 100%?</p>
+<div class="cell" data-tbl-cap="Probability that the final balance is at or above $30,000 under the 100% strategy." data-execution_count="9">
+<div id="prob-table" class="cell-output cell-output-display" data-execution_count="9">
+<style type="text/css">
+#T_56ebb th {
+  background-color: #c62828;
+  color: white;
+  font-weight: bold;
+  padding: 6px;
+}
+#T_56ebb tbody td {
+  padding: 6px;
+}
+#T_56ebb tbody tr:nth-child(even) {
+  background-color: #ffebee;
+}
+</style>
+
+<table id="T_56ebb" class="caption-top table table-sm table-striped small">
+<caption>Probability that the final balance is at or above $30,000 under the 100% strategy.</caption>
+<thead>
+<tr class="header">
+<th id="T_56ebb_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Metric</th>
+<th id="T_56ebb_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td id="T_56ebb_row0_col0" class="data row0 col0">Number of simulated lifetimes</td>
+<td id="T_56ebb_row0_col1" class="data row0 col1">100</td>
+</tr>
+<tr class="even">
+<td id="T_56ebb_row1_col0" class="data row1 col0">Years per lifetime (coin flips)</td>
+<td id="T_56ebb_row1_col1" class="data row1 col1">55</td>
+</tr>
+<tr class="odd">
+<td id="T_56ebb_row2_col0" class="data row2 col0">Lifetimes with final balance ≥ $30,000</td>
+<td id="T_56ebb_row2_col1" class="data row2 col1">16</td>
+</tr>
+<tr class="even">
+<td id="T_56ebb_row3_col0" class="data row3 col0">Probability (decimal)</td>
+<td id="T_56ebb_row3_col1" class="data row3 col1">0.160</td>
+</tr>
+<tr class="odd">
+<td id="T_56ebb_row4_col0" class="data row4 col0">Probability (percentage)</td>
+<td id="T_56ebb_row4_col1" class="data row4 col1">16.0%</td>
+</tr>
+<tr class="even">
+<td id="T_56ebb_row5_col0" class="data row5 col0">Probability (final balance &lt; $30,000)</td>
+<td id="T_56ebb_row5_col1" class="data row5 col1">0.840 (84.0%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>In words: only a minority of lifetimes finish above the starting $30,000, even though a single flip has positive expected value. For most players, the long run is unforgiving when the full account is at risk each year.</p>
 </section>
 <section id="modified-strategy-bet-25-of-the-balance-each-year" class="level2" data-number="1.5">
 <h2 data-number="1.5" class="anchored" data-anchor-id="modified-strategy-bet-25-of-the-balance-each-year"><span class="header-section-number">1.5</span> Modified strategy – bet 25% of the balance each year</h2>
-<p>Now I test a more cautious rule: each year only <strong>25%</strong> of the account is exposed to the flip, and 75% sits on the sidelines for that year.</p>
+<p>Next, I test a more cautious rule: each year only <strong>25%</strong> of the account is exposed to the flip, and 75% sits on the sidelines for that year.</p>
 <section id="overlay-of-the-two-strategies" class="level3" data-number="1.5.1">
 <h3 data-number="1.5.1" class="anchored" data-anchor-id="overlay-of-the-two-strategies"><span class="header-section-number">1.5.1</span> Overlay of the two strategies</h3>
-<div id="cell-overlay-hist" class="cell" data-fig-height="4.8" data-fig-width="8" data-execution_count="9">
+<div id="cell-overlay-hist" class="cell" data-fig-height="4.8" data-fig-width="8" data-execution_count="11">
 <div class="cell-output cell-output-display">
 <div id="overlay-hist" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -314,73 +413,75 @@ The histogram is very skewed: most lifetimes end in the red, with a small cluste
 </div>
 </div>
 </section>
-<section id="side-by-side-strategy-comparison" class="level3" data-number="1.5.2">
-<h3 data-number="1.5.2" class="anchored" data-anchor-id="side-by-side-strategy-comparison"><span class="header-section-number">1.5.2</span> Side-by-side strategy comparison</h3>
-<div class="cell" data-tbl-cap="Comparison of the 100% and 25% strategies over 100 simulated lifetimes." data-execution_count="10">
-<div id="compare-tables" class="cell-output cell-output-display" data-execution_count="10">
+<section id="sidebyside-strategy-comparison" class="level3" data-number="1.5.2">
+<h3 data-number="1.5.2" class="anchored" data-anchor-id="sidebyside-strategy-comparison"><span class="header-section-number">1.5.2</span> Side‑by‑side strategy comparison</h3>
+<div class="cell" data-tbl-cap="Comparison of the 100% and 25% strategies over 100 simulated lifetimes." data-execution_count="13">
+<div id="compare-table" class="cell-output cell-output-display" data-execution_count="13">
 <style type="text/css">
-#T_dc896 th {
+#T_551cf th {
   background-color: #455a64;
   color: white;
   font-weight: bold;
   padding: 6px;
 }
-#T_dc896 tbody td {
+#T_551cf tbody td {
   padding: 6px;
 }
-#T_dc896 tbody tr:nth-child(even) {
+#T_551cf tbody tr:nth-child(even) {
   background-color: #eceff1;
 }
 </style>
 
-<table id="T_dc896" class="caption-top table table-sm table-striped small">
+<table id="T_551cf" class="caption-top table table-sm table-striped small">
 <caption>Comparison of the 100% and 25% strategies over 100 simulated lifetimes.</caption>
 <thead>
 <tr class="header">
-<th id="T_dc896_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Statistic</th>
-<th id="T_dc896_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">100% each year</th>
-<th id="T_dc896_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">25% each year</th>
+<th id="T_551cf_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Statistic</th>
+<th id="T_551cf_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">100% each year</th>
+<th id="T_551cf_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">25% each year</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_dc896_row0_col0" class="data row0 col0">P(final ≥ $30,000)</td>
-<td id="T_dc896_row0_col1" class="data row0 col1">0.160 (16.0%)</td>
-<td id="T_dc896_row0_col2" class="data row0 col2">0.680 (68.0%)</td>
+<td id="T_551cf_row0_col0" class="data row0 col0">P(final ≥ $30,000)</td>
+<td id="T_551cf_row0_col1" class="data row0 col1">0.160 (16.0%)</td>
+<td id="T_551cf_row0_col2" class="data row0 col2">0.680 (68.0%)</td>
 </tr>
 <tr class="even">
-<td id="T_dc896_row1_col0" class="data row1 col0">Mean final balance</td>
-<td id="T_dc896_row1_col1" class="data row1 col1">$86,910.77</td>
-<td id="T_dc896_row1_col2" class="data row1 col2">$49,603.58</td>
+<td id="T_551cf_row1_col0" class="data row1 col0">Mean final balance</td>
+<td id="T_551cf_row1_col1" class="data row1 col1">$86,910.77</td>
+<td id="T_551cf_row1_col2" class="data row1 col2">$49,603.58</td>
 </tr>
 <tr class="odd">
-<td id="T_dc896_row2_col0" class="data row2 col0">Median final balance</td>
-<td id="T_dc896_row2_col1" class="data row2 col1">$1,046.70</td>
-<td id="T_dc896_row2_col2" class="data row2 col2">$37,759.79</td>
+<td id="T_551cf_row2_col0" class="data row2 col0">Median final balance</td>
+<td id="T_551cf_row2_col1" class="data row2 col1">$1,046.70</td>
+<td id="T_551cf_row2_col2" class="data row2 col2">$37,759.79</td>
 </tr>
 <tr class="even">
-<td id="T_dc896_row3_col0" class="data row3 col0">Standard deviation</td>
-<td id="T_dc896_row3_col1" class="data row3 col1">$454,873.69</td>
-<td id="T_dc896_row3_col2" class="data row3 col2">$38,149.02</td>
+<td id="T_551cf_row3_col0" class="data row3 col0">Standard deviation</td>
+<td id="T_551cf_row3_col1" class="data row3 col1">$454,873.69</td>
+<td id="T_551cf_row3_col2" class="data row3 col2">$38,149.02</td>
 </tr>
 <tr class="odd">
-<td id="T_dc896_row4_col0" class="data row4 col0">Minimum</td>
-<td id="T_dc896_row4_col1" class="data row4 col1">$0.27</td>
-<td id="T_dc896_row4_col2" class="data row4 col2">$4,054.43</td>
+<td id="T_551cf_row4_col0" class="data row4 col0">Minimum</td>
+<td id="T_551cf_row4_col1" class="data row4 col1">$0.27</td>
+<td id="T_551cf_row4_col2" class="data row4 col2">$4,054.43</td>
 </tr>
 <tr class="even">
-<td id="T_dc896_row5_col0" class="data row5 col0">Maximum</td>
-<td id="T_dc896_row5_col1" class="data row5 col1">$3,992,825.57</td>
-<td id="T_dc896_row5_col2" class="data row5 col2">$225,065.92</td>
+<td id="T_551cf_row5_col0" class="data row5 col0">Maximum</td>
+<td id="T_551cf_row5_col1" class="data row5 col1">$3,992,825.57</td>
+<td id="T_551cf_row5_col2" class="data row5 col2">$225,065.92</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
+<p><strong>Take‑away from the comparison.</strong><br>
+The 100% strategy has a higher mean because of a handful of massive wins, but its median is much lower and its chance of finishing above $30,000 is small. The 25% strategy trims the wildest jackpots, but it raises the median and pushes a much larger share of lifetimes into the “comfortable” zone above the starting balance.</p>
 </section>
 </section>
-<section id="kelly-style-reflection" class="level2" data-number="1.6">
-<h2 data-number="1.6" class="anchored" data-anchor-id="kelly-style-reflection"><span class="header-section-number">1.6</span> Kelly-style reflection</h2>
+<section id="kellystyle-reflection" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="kellystyle-reflection"><span class="header-section-number">1.6</span> Kelly‑style reflection</h2>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -391,17 +492,17 @@ The histogram is very skewed: most lifetimes end in the red, with a small cluste
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The Kelly Criterion gives the stake fraction that maximizes long-run (geometric) growth for a repeated bet.</p>
-<p>For this coin-flip game (50% chance of +50%, 50% chance of −40%), the Kelly calculation produces an optimal stake fraction close to <strong>25%</strong> of the account each round.</p>
+<p>The Kelly Criterion gives the stake fraction that maximizes long‑run (geometric) growth for a repeated bet.</p>
+<p>For this coin‑flip game (50% chance of +50%, 50% chance of −40%), the Kelly calculation produces an optimal stake fraction close to <strong>25%</strong> of the account per round.</p>
 </div>
 </div>
-<p>Viewed through that lens:</p>
+<p>Seen through that lens:</p>
 <ul>
-<li>The <strong>100% strategy</strong> is far above Kelly. It offers a few impressive retirements and many that end below the original $30,000 after 55 years of flips.<br>
+<li>The <strong>100% strategy</strong> is far above Kelly. It offers a few brilliant endings and many retirements that finish below the original $30,000 after 55 years of flips.<br>
 </li>
 <li>The <strong>25% strategy</strong> sits near the Kelly fraction. It improves the odds of finishing ahead, raises the median outcome, and cuts back the most painful losses.</li>
 </ul>
-<p>For a long investing life from <strong>age 20 to 75</strong>, the fractional strategy looks like a more realistic way to enjoy the game without letting a long tail of bad luck wreck the outcome.</p>
+<p>For a long investing life from <strong>age 20 to 75</strong>, the fractional strategy looks like a more realistic way to enjoy the positive expected value of the game without letting a long tail of bad luck completely ruin the outcome.</p>
 </section>
 </section>
 
