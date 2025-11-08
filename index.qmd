@@ -18,9 +18,9 @@ jupyter: python3
 
 # Overview
 
-This project studies a coin-flip investment game played once per year from age 30 to age 75.
+This project studies a coin-flip investment game played once per year from age 20 to age 75.
 
-- Starting balance at age 30: **$30,000**  
+- Starting balance at age 20: **$30,000**  
 - Each year: flip a fair coin  
   - Heads → multiply by **1.5** (50% gain)  
   - Tails → multiply by **0.6** (40% loss)
@@ -30,12 +30,12 @@ I compare two ways to play:
 1. **100% strategy** – the entire balance is at risk every year.  
 2. **25% strategy** – only 25% of the balance is exposed each year; the rest sits out that year.
 
-The questions:
+The guiding questions:
 
-- What happens to one account over time?  
-- What do many simulated lifetimes look like?  
-- How often do we finish above the starting $30,000?  
-- How does the 25% strategy change the picture?
+- How wild can one lifetime path become from age 20 to 75?  
+- Across many simulated lifetimes, what does the distribution of final balances look like?  
+- How often do we retire with more than the original $30,000?  
+- How does the 25% strategy change both risk and upside?
 
 ```{python}
 #| label: setup
@@ -47,22 +47,22 @@ import matplotlib.pyplot as plt
 
 plt.style.use("dark_background")
 
-age_start = 30
+age_start = 20
 age_end = 75
-n_years = age_end - age_start
+n_years = age_end - age_start           # number of flips
 initial_balance = 30_000
-target_balance = initial_balance
+target_balance = initial_balance        # break-even target
 
 p_head = 0.5
 up = 0.50
 down = -0.40
 
-growth_head_full = 1 + up
-growth_tail_full = 1 + down
+growth_head_full = 1 + up               # 1.5
+growth_tail_full = 1 + down             # 0.6
 
 fraction = 0.25
-growth_head_frac = 0.75 + 1.5 * fraction
-growth_tail_frac = 0.75 + 0.6 * fraction
+growth_head_frac = 0.75 + 1.5 * fraction   # 1.125
+growth_tail_frac = 0.75 + 0.6 * fraction   # 0.90
 
 def simulate_path_full(rng, n_years, initial_balance):
     balance = initial_balance
@@ -105,16 +105,16 @@ def summarize_array(x):
     )
 ```
 
-## 1) Expected value after one flip
+## Expected value after one flip
 
-Initial balance at age 30: **$30,000**.
+Imagine the very first year at age 20, right after we invest the $30,000.
 
-Outcomes after one flip:
+Outcomes after that first coin flip:
 
-- If heads: $45,000 (probability 0.5)  
-- If tails: $18,000 (probability 0.5)
+- Heads: the account jumps to $45,000 (probability 0.5)  
+- Tails: the account drops to $18,000 (probability 0.5)
 
-Expected value after one flip:
+The expected value after one flip is
 
 \[
 \mathbb{E}[W_1]
@@ -125,7 +125,7 @@ Expected value after one flip:
 Gain in expected value: **$1,500**  
 Gain as a percentage of the buy-in: **5%**
 
-So at the one-flip level the game increases expected wealth by 5%. The rest of the analysis asks how that story changes when the game is played every year from age 30 to 75.
+So, based on a single step, the game promises about a **5% boost** to wealth. The tension in this project is that we keep playing this game **55 years in a row**, and compounding can amplify both good and bad stretches.
 
 ::: callout-tip
 #### Math lens
@@ -146,14 +146,16 @@ Then
 \mathbb{E}[W_1] = (0.5\cdot1.5 + 0.5\cdot0.6) W_0 = 1.05 W_0,
 \]
 
-so the expected gain per flip is 5% of the current wealth.
+so the expected gain per flip is 5% of current wealth.
 :::
 
-## 2) One simulated path from age 30 to 75 (100% strategy)
+## One simulated path from age 20 to 75 (100% strategy)
+
+To get a feel for the risk, I start with one sample lifetime where the entire account is exposed every single year.
 
 ```{python}
 #| label: single-path
-#| fig-cap: "One simulated path from age 30 to age 75 when 100% of the account is at risk each year."
+#| fig-cap: "One simulated path from age 20 to age 75 when 100% of the account is at risk each year."
 #| fig-width: 8
 #| fig-height: 4.5
 #| out-width: "100%"
@@ -201,7 +203,12 @@ final_single = balances_single[-1]
 print(f"Final balance at age {age_end}: ${final_single:,.2f}")
 ```
 
-## 3) 100 simulations – distribution for the 100% strategy
+**Story of this path.**  
+The account spends decades drifting up and down, often sitting below the original $30,000 line. By age 75 this run ends far from a “rich retirement”. A single unlucky cluster of tails late in life can erase years of earlier wins, which is exactly what makes the 100% strategy so fragile.
+
+## 100 simulations – distribution for the 100% strategy
+
+One path is a story; 100 paths form a distribution. Here I simulate **100 lifetimes** from age 20 to 75 where the full balance is at risk each year and record the final balance at age 75.
 
 ```{python}
 #| label: sims-full
@@ -359,7 +366,12 @@ styled_percentiles = (
 styled_summary, styled_percentiles
 ```
 
-## 4) Probability that the balance exceeds $30,000 at age 75
+**Reading the picture.**  
+The histogram is very skewed: most lifetimes end in the red, with a small cluster of enormous wins dragging the mean to the right. The median, lower percentiles, and the probability in the table make it clear that a “typical” player does not retire happy with this approach.
+
+## Probability that the balance exceeds $30,000 at age 75
+
+Here I zoom in on one question: *starting at age 20, what fraction of lifetimes end at or above $30,000 by age 75 when we always bet 100%?*
 
 ```{python}
 #| label: prob-table
@@ -369,9 +381,9 @@ n_success = int((finals_full >= target_balance).sum())
 
 prob_df = pd.DataFrame({
     "Metric": [
-        "Number of simulations",
-        "Number of coin flips per simulation",
-        "Simulations with final balance ≥ $30,000",
+        "Number of simulated lifetimes",
+        "Years per lifetime (coin flips)",
+        "Lifetimes with final balance ≥ $30,000",
         "Probability (decimal)",
         "Probability (percentage)",
         "Probability (final balance < $30,000)"
@@ -406,9 +418,11 @@ styled_prob = (
 styled_prob
 ```
 
-This table reports the estimate of \(P(\text{final balance} \ge 30{,}000)\) directly from the simulations, without repeating the number again in the surrounding text.
+In words: only a minority of lifetimes end above the starting $30,000, even though each single flip has positive expected value.
 
-## 5) Modified strategy – bet 25% of the balance each year
+## Modified strategy – bet 25% of the balance each year
+
+Now I test a more cautious rule: each year only **25%** of the account is exposed to the flip, and 75% sits on the sidelines for that year.
 
 ```{python}
 #| label: sims-frac
@@ -425,6 +439,8 @@ log_frac = np.log(finals_frac)
 mu_frac = log_frac.mean()
 sigma_frac = log_frac.std(ddof=0)
 ```
+
+### Overlay of the two strategies
 
 ```{python}
 #| label: overlay-hist
@@ -531,19 +547,19 @@ styled_compare = (
 styled_compare
 ```
 
-## 6) Kelly-style reflection
+## Kelly-style reflection
 
 ::: callout-tip
 #### Kelly perspective
 
-The Kelly Criterion describes how much of a bankroll to stake on a favorable bet when the goal is long-run (geometric) growth.  
+The Kelly Criterion gives the stake fraction that maximizes long-run (geometric) growth for a repeated bet.  
 
-For this game (50% chance of +50%, 50% chance of −40%), the Kelly fraction comes out close to **25%** of the account per flip.
+For this coin-flip game (50% chance of +50%, 50% chance of −40%), the Kelly calculation produces an optimal stake fraction close to **25%** of the account each round.
 :::
 
-The simulations match that idea:
+Viewed through that lens:
 
-- The **100% strategy** sits far above Kelly. It generates a few spectacular wins and many retirements that end below the original $30,000.  
-- The **25% strategy** is closer to Kelly. It raises the chance of finishing ahead, pushes the median above $30,000, and reduces the worst outcomes.
+- The **100% strategy** is far above Kelly. It offers a few impressive retirements and many that end below the original $30,000 after 55 years of flips.  
+- The **25% strategy** sits near the Kelly fraction. It improves the odds of finishing ahead, raises the median outcome, and cuts back the most painful losses.
 
-Over the horizon from age 30 to 75, the fractional strategy offers a better balance between growth and protection.
+For a long investing life from **age 20 to 75**, the fractional strategy looks like a more realistic way to enjoy the game without letting a long tail of bad luck wreck the outcome.
