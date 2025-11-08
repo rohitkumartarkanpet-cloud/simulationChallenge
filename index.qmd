@@ -1,491 +1,549 @@
 ---
-title: "Simulation Challenge"
-subtitle: "Starter Template with To-Dos"
+title: "Simulation Challenge: Coin-Flip Retirement Game"
+author: "Rohit Kumar, Tarkanpet"
 format:
-  html: default
+  html:
+    theme: flatly
+    toc: true
+    toc-location: right
+    number-sections: true
+    code-fold: true
+    smooth-scroll: true
 execute:
-  echo: true
-  eval: true
+  echo: false
+  warning: false
+  message: false
+jupyter: python3
 ---
 
-# 🎲 Simulation Challenge - Starter Template
+# Overview
 
-:::: {.callout-important}
-## 📋 What You Need To Do
+This project studies a coin-flip investment game played once per year from age 30 to age 75.
 
-- [ ] Fork and create repo `simulationChallenge` in your GitHub
-- [ ] Clone locally and open in Cursor
-- [ ] Write your analysis in this `index.qmd`
-- [ ] Render to HTML (`quarto render` or Render button)
-- [ ] Push HTML to your repo and enable GitHub Pages
-- [ ] Share your site: `https://[your-username].github.io/simulationChallenge/`
-:::
+- Starting balance at age 30: **$30,000**  
+- Each year: flip a fair coin  
+  - Heads → multiply by **1.5** (50% gain)  
+  - Tails → multiply by **0.6** (40% loss)
 
-:::: {.callout-warning}
-## ⚠️ AI Partnership Required
-Use Cursor AI for speed, but ensure you understand and can explain the results in your own words.  Verify cursor's calculations as investment simulation is tricky.
-:::
+I compare two ways to play:
 
-## The Investment Game (Brief)
+1. **100% strategy** – the entire balance is at risk every year.  
+2. **25% strategy** – only 25% of the balance is exposed each year; the rest sits out that year.
 
-You have the opportunity to buy-in to this game next week with $30,000. Your job is to analyze the potential outcomes of the game and communicate why or why you should not buy-in to the game.  
+The questions:
 
-Each year after buy-in you flip a fair coin:
-
-- Heads: increase your account balance by 50%
-- Tails: decrease your account balance by 40%
-
-You play annually until age 75. Your mission is to analyze outcomes and communicate insights clearly.
-
-### Generative DAG Model (from the source challenge)
-
-The following DAFT diagram shows the generative structure of the investment game over time.
+- What happens to one account over time?  
+- What do many simulated lifetimes look like?  
+- How often do we finish above the starting $30,000?  
+- How does the 25% strategy change the picture?
 
 ```{python}
-#| echo: false
+#| label: setup
 #| include: false
-#|  fig-width: 7
-#| fig-height: 4
-#| out-width: "100%"
-import daft
 
-# Create the DAG directly without custom class
-investmentDAG = daft.PGM(dpi=100, alternate_style="outer")
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# Initial wealth (deterministic)
-investmentDAG.add_node("W0", "Initial Wealth\n$W_0 = 30,000$", x=4, y=2.5, aspect=5.4, 
-                      alternate=True, plot_params={'facecolor': 'aliceblue'})
+plt.style.use("dark_background")
 
-# Time t nodes  
-investmentDAG.add_node("Ct", "Coin Flip t\n$C_t \\sim \\text{Bernoulli}(0.5)$", x=0, y=1, aspect=4, scale = 1.6,
-                      plot_params={'facecolor': 'aliceblue'})
-investmentDAG.add_node("Wt", "\nWealth t\n$W_t = 1.5 \\times W_{t-1}$ if $C_t = 1$\n$W_t = 0.6 \\times W_{t-1}$ if $C_t = 0$\n", x=4, y=1, scale = 1.6, aspect=4,
-                      alternate=True, plot_params={'facecolor': 'aliceblue'})
+age_start = 30
+age_end = 75
+n_years = age_end - age_start
+initial_balance = 30_000
+target_balance = initial_balance
 
-# Add edges showing the relationships
-investmentDAG.add_edge("W0", "Wt")
-investmentDAG.add_edge("Ct", "Wt")
+p_head = 0.5
+up = 0.50
+down = -0.40
 
-# Add plate around time-dependent nodes
-investmentDAG.add_plate([-2, 0.5, 7.8, 1.0], label="t = 1, ..., N", shift=-0.1)
+growth_head_full = 1 + up
+growth_tail_full = 1 + down
+
+fraction = 0.25
+growth_head_frac = 0.75 + 1.5 * fraction
+growth_tail_frac = 0.75 + 0.6 * fraction
+
+def simulate_path_full(rng, n_years, initial_balance):
+    balance = initial_balance
+    balances = [balance]
+    for _ in range(n_years):
+        if rng.random() < p_head:
+            balance *= growth_head_full
+        else:
+            balance *= growth_tail_full
+        balances.append(balance)
+    return np.array(balances)
+
+def simulate_final_full(rng, n_years, initial_balance):
+    balance = initial_balance
+    for _ in range(n_years):
+        if rng.random() < p_head:
+            balance *= growth_head_full
+        else:
+            balance *= growth_tail_full
+    return balance
+
+def simulate_final_frac(rng, n_years, initial_balance):
+    balance = initial_balance
+    for _ in range(n_years):
+        if rng.random() < p_head:
+            balance *= growth_head_frac
+        else:
+            balance *= growth_tail_frac
+    return balance
+
+def summarize_array(x):
+    x = np.asarray(x)
+    return dict(
+        count = x.size,
+        mean = x.mean(),
+        median = np.median(x),
+        std = x.std(ddof=1),
+        minimum = x.min(),
+        maximum = x.max(),
+    )
 ```
 
-```{python}
-#| label: fig-investment-dag
-#| fig-cap: Generative DAG model for the investment game showing how wealth evolves over time through coin flips
-#| echo: false
-investmentDAG.show()
-```
+## 1) Expected value after one flip
 
-## Analysis Tasks (Fill These In)
+Initial balance at age 30: **$30,000**.
 
-::::: {.callout-note}
-## Grading Scope
+Outcomes after one flip:
 
-- Sections 1–4: required and can earn up to 90% of the grade.
-- Sections 5–6: optional; strong, well-supported work here can bring your score up to 100%.
-::::
+- If heads: $45,000 (probability 0.5)  
+- If tails: $18,000 (probability 0.5)
 
-### 1) Expected Value After 1 Flip
-
-After one flip, the **expected value (EV)** of my balance is **greater than $30,000**.
-
-- If I get **Heads (+50%)**, my balance becomes \(30,000 × 1.5 = 45,000\).  
-- If I get **Tails (–40%)**, my balance becomes \(30,000 × 0.6 = 18,000\).  
-
-So, the expected value after one flip is:
+Expected value after one flip:
 
 \[
-EV = 0.5(45,000) + 0.5(18,000) = \mathbf{31,500}
+\mathbb{E}[W_1]
+= 0.5 \times 45{,}000 + 0.5 \times 18{,}000
+= 31{,}500.
 \]
 
-That’s a **$1,500 gain**, which is **+5%** of the buy-in.  
-So, this simple one-flip analysis suggests it’s worth buying in, since the average outcome is positive.
+Gain in expected value: **$1,500**  
+Gain as a percentage of the buy-in: **5%**
 
-However, it’s important to remember that this only looks at one round — in repeated flips, the *geometric mean* might tell a different story about long-term growth.
+So at the one-flip level the game increases expected wealth by 5%. The rest of the analysis asks how that story changes when the game is played every year from age 30 to 75.
 
+::: callout-tip
+#### Math lens
+
+Let \(W_0\) be the starting wealth. One flip gives  
+
+\[
+W_1 = 
+\begin{cases}
+1.5 W_0 & \text{with prob. } 0.5, \\[4pt]
+0.6 W_0 & \text{with prob. } 0.5.
+\end{cases}
+\]
+
+Then  
+
+\[
+\mathbb{E}[W_1] = (0.5\cdot1.5 + 0.5\cdot0.6) W_0 = 1.05 W_0,
+\]
+
+so the expected gain per flip is 5% of the current wealth.
+:::
+
+## 2) One simulated path from age 30 to 75 (100% strategy)
 
 ```{python}
-#| label: q1-expected-value-py
-#| echo: false
-#| fig-width: 7
-#| fig-height: 4
+#| label: single-path
+#| fig-cap: "One simulated path from age 30 to age 75 when 100% of the account is at risk each year."
+#| fig-width: 8
+#| fig-height: 4.5
 #| out-width: "100%"
 
-# Compute expected value after one flip
-S0 = 30000      # initial balance
-p  = 0.5        # fair coin
-up = 0.50       # +50% gain
-dn = -0.40      # -40% loss
+rng_single = np.random.default_rng(2025)
+balances_single = simulate_path_full(rng_single, n_years, initial_balance)
+ages = np.arange(age_start, age_end + 1)
 
-EV_factor = p*(1+up) + (1-p)*(1+dn)
-EV_after = S0 * EV_factor
-gain_pct = (EV_after / S0 - 1) * 100
+fig, ax = plt.subplots(figsize=(8, 4.5))
+ax.plot(
+    ages,
+    balances_single,
+    marker="o",
+    linewidth=2.2,
+    color="#f06292",
+    label="Account balance"
+)
+ax.fill_between(
+    ages,
+    balances_single,
+    color="#f06292",
+    alpha=0.20,
+    linewidth=0
+)
+ax.axhline(
+    initial_balance,
+    linestyle="--",
+    linewidth=1.5,
+    color="#ffca28",
+    label="Starting $30,000"
+)
+ax.set_xlabel("Age")
+ax.set_ylabel("Account balance ($)")
+ax.set_title("Single Lifetime: 100% Strategy")
+ax.grid(alpha=0.35)
+ax.legend()
+fig.tight_layout()
 
-print(f"Expected value after 1 flip: ${EV_after:,.0f}")
-print(f"Gain as % of buy-in: {gain_pct:.1f}%")
+final_single = balances_single[-1]
 ```
 
-### 2) Single Simulation Over Time (Narrative + Plot)
+```{python}
+#| label: single-path-text
 
-I start with **$30,000 at age 30**. Each year until **age 75**, I flip the coin once. The chart shows the account after each year’s result, so you can see how the path changes across real ages. I shaded gains vs. losses relative to the buy-in, and I marked the **peak**, **deepest dip**, and **ending balance** at age 75.
+print(f"Final balance at age {age_end}: ${final_single:,.2f}")
+```
 
+## 3) 100 simulations – distribution for the 100% strategy
 
 ```{python}
-#| label: q2-single-sim-ages30-75
-#| echo: false
-#| fig-cap: "Single simulation from age 30 (buy-in) to age 75 — one flip each year"
-#| fig-width: 7
-#| fig-height: 4
+#| label: sims-full
+#| include: false
+
+rng_full = np.random.default_rng(310)
+n_runs = 100
+
+finals_full = np.array([simulate_final_full(rng_full, n_years, initial_balance)
+                        for _ in range(n_runs)])
+
+stats_full = summarize_array(finals_full)
+p_above_full = (finals_full >= target_balance).mean()
+
+log_full = np.log(finals_full)
+mu_full = log_full.mean()
+sigma_full = log_full.std(ddof=0)
+```
+
+```{python}
+#| label: hist-full
+#| fig-cap: "Distribution of final balances for the 100% strategy (100 runs, log scale)."
+#| fig-width: 8
+#| fig-height: 4.8
 #| out-width: "100%"
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
+fig, ax = plt.subplots(figsize=(8, 4.8))
 
-# -----------------------------
-# Timeline setup: ages 30 → 75
-# -----------------------------
-age_start = 30
-age_end   = 75
-n_years   = age_end - age_start  # number of flips (e.g., 45 years)
+min_bal = max(finals_full.min(), 1e-2)
+max_bal = finals_full.max()
+bins = np.logspace(np.log10(min_bal*0.8), np.log10(max_bal*1.2), 24)
 
-# Game parameters
-S0   = 30000
-p    = 0.5
-up   = 0.50
-down = -0.40
-rng  = np.random.default_rng(202)
+counts, bin_edges, patches = ax.hist(
+    finals_full,
+    bins=bins,
+    edgecolor="white",
+    alpha=0.95,
+)
 
-# -----------------------------
-# Simulate one path
-#   - balance[0] is at age 30 (before any flip)
-#   - then 1 flip per year through age 75
-# -----------------------------
-ages = np.arange(age_start, age_end + 1)  # 30,31,...,75  (len = n_years+1)
-flips = rng.random(n_years) < p           # True=heads, False=tails (len = n_years)
+for i, patch in enumerate(patches):
+    center = np.sqrt(bin_edges[i] * bin_edges[i+1])
+    if center < target_balance:
+        patch.set_facecolor("#ff6b6b")
+        patch.set_hatch("///")
+    else:
+        patch.set_facecolor("#26c6da")
+        patch.set_hatch("..")
 
-bal = [S0]  # balance at age 30
-for h in flips:  # compute balance at ages 31..75
-    r = up if h else down
-    bal.append(bal[-1] * (1 + r))
-bal = np.array(bal)
+x_curve = np.logspace(np.log10(min_bal*0.8), np.log10(max_bal*1.4), 800)
+log_pdf = (1.0 / (x_curve * sigma_full * np.sqrt(2*np.pi))) *           np.exp(-0.5 * ((np.log(x_curve) - mu_full) / sigma_full)**2)
+scale = counts.max() / log_pdf.max() if log_pdf.max() > 0 else 1.0
+ax.plot(x_curve, log_pdf * scale, color="#ffffff", lw=2.2, label="Log-normal guide")
 
-# Key points on the path
-i_max = int(np.argmax(bal))
-i_min = int(np.argmin(bal))
-i_end = len(bal) - 1  # should correspond to age 75
+ax.axvline(target_balance, color="#40c4ff", linestyle="--", lw=2, label="Buy-in $30k")
+ax.axvline(stats_full["median"], color="#ffeb3b", linestyle="--", lw=2, label="Median")
+ax.axvline(stats_full["mean"], color="#b39ddb", linestyle="--", lw=2, label="Mean")
 
-# -----------------------------
-# Figure (single axes)
-# -----------------------------
-fig, ax = plt.subplots(figsize=(10, 5), facecolor="#0b1220")
-ax.set_facecolor("#0b1220")
+ax.set_xscale("log")
+ax.set_xlim(bins[0], bins[-1])
+ax.set_xlabel("Final balance ($, log scale)")
+ax.set_ylabel("Number of simulations")
+ax.set_title("Final Balances – 100% Strategy (100 Lifetimes)")
+ax.grid(True, which="both", linestyle="--", alpha=0.35)
 
-# Nicer y-limits with headroom
-ymin = min(bal.min() * 0.92, S0 * 0.88)
-ymax = max(bal.max() * 1.06, S0 * 1.08)
-ax.set_ylim(ymin, ymax)
+badge = (
+    f"P(final ≥ $30k) = {p_above_full:.3f}\n"
+    f"Mean = ${stats_full['mean']:,.0f}\n"
+    f"Median = ${stats_full['median']:,.0f}"
+)
+ax.text(
+    0.98,
+    0.98,
+    badge,
+    transform=ax.transAxes,
+    ha="right",
+    va="top",
+    fontsize=9,
+    bbox=dict(boxstyle="round,pad=0.4",
+              facecolor="#263238",
+              alpha=0.9,
+              edgecolor="#90caf9"),
+)
 
-# Gain/Loss shading vs. buy-in
-ax.fill_between(ages, bal, S0, where=(bal >= S0), color="#10b981", alpha=0.08, linewidth=0)
-ax.fill_between(ages, bal, S0, where=(bal <  S0), color="#f43f5e", alpha=0.10, linewidth=0)
-
-# Buy-in reference line
-ax.axhline(S0, ls="--", lw=1.3, color="#64748b")
-
-# Neon-glow path (glow under + crisp line on top)
-glow = pe.withStroke(linewidth=10, foreground="#06b6d4", alpha=0.22)
-ax.plot(ages, bal, color="#06b6d4", lw=5, alpha=0.55, solid_capstyle="round", path_effects=[glow])
-ax.plot(ages, bal, color="#a78bfa", lw=2.2, solid_capstyle="round")
-
-# Per-year tick marks along the bottom showing flip result at that age step
-# (flip for age k happens between age k and k+1; we draw tick at the ending age)
-tick_y = ymin + 0.015*(ymax - ymin)
-for k in range(n_years):
-    age_tick = ages[k+1]  # result realized at end of the year
-    is_head  = flips[k]
-    ax.vlines(age_tick, ymin, tick_y,
-              colors=("#10b981" if is_head else "#f43f5e"),
-              lw=2, alpha=0.9)
-
-# Markers: start (30), peak, trough, end (75)
-ax.scatter([ages[0]],   [bal[0]],   s=70, color="#22d3ee", zorder=5)
-ax.scatter([ages[i_max]],[bal[i_max]], s=85, color="#22c55e", zorder=5)
-ax.scatter([ages[i_min]],[bal[i_min]], s=85, color="#ef4444", zorder=5)
-ax.scatter([ages[i_end]],[bal[i_end]], s=85, color="#e879f9", zorder=5)
-
-# Labels
-ax.text(ages[0],    bal[0]    + 0.02*(ymax-ymin), "Age 30 (Start)", color="#22d3ee", fontsize=9, weight="bold")
-ax.text(ages[i_max],bal[i_max] + 0.02*(ymax-ymin), "Peak",          color="#22c55e", fontsize=9, weight="bold", ha="center")
-ax.text(ages[i_min],bal[i_min] - 0.03*(ymax-ymin), "Deepest Dip",   color="#ef4444", fontsize=9, weight="bold", ha="center")
-ax.text(ages[i_end]+0.6, bal[i_end], f"${bal[i_end]:,.0f}\n(Age 75)", color="#e879f9",
-        fontsize=10, weight="bold", va="center")
-
-# Titles / axes / grid
-ax.set_title("Single Simulation: Account from Age 30 to Age 75", color="white", fontsize=13, pad=10)
-ax.set_xlabel("Age", color="#e5e7eb"); ax.set_ylabel("Balance ($)", color="#e5e7eb")
-ax.tick_params(colors="#cbd5e1")
-ax.grid(alpha=0.15, color="#94a3b8")
-
-# Legend note
-ax.text(0.01, 0.02,
-        "Ticks: heads (green) / tails (red) • Dashed line = buy-in ($30k) at age 30",
-        transform=ax.transAxes, color="#94a3b8", fontsize=9)
-
-plt.tight_layout()
-plt.show()
-
+ax.legend(loc="upper left", framealpha=0.85)
+fig.tight_layout()
 ```
 
-### 3) 100 Simulations: Distribution of Final Balances
-
-**What the chart shows:**  
-- The **x-axis** is the **final account balance in dollars** for each run.  
-- The **y-axis** is the **number of simulations** that finished in each dollar range (each bar).  
-- Most bars sit **to the left of the $30,000 line**, which means most runs end **below the buy-in**.  
-- There is a **long right tail**—a few lucky runs end far above $30k and pull the average up, but those wins are **rare**.
-
-**Probability of a “happy” outcome (≥ $30,000):**  
-- If “happy” means **finish at or above $30,000**, the estimated probability from my 100 runs is **about 25%** (≈ **1 in 4**).  
-- If “happy” means a higher target (like **≥ $36,000** or **≥ $45,000**), the chance drops to **single-digit percentages**.  
-- So, while **big wins can happen**, the **typical** outcome is a loss; the distribution is **skewed** with many small losses and a few large wins.
-
-**Bottom line:**  
-If my goal is simply **not to lose money** on a $30k buy-in, these odds (**~25% to break even or better**) are **not great**.
-
-> *Note:* Because this is a simulation, the exact percentage can shift a little with a different random seed, but the overall story—**many losses, few big wins**—stays the same.
+### Summary tables for the 100% strategy
 
 ```{python}
-#| label: q3-final-growth
-#| echo: false
-#| fig-cap: "Final Growth (100 simulations; ages 30→75). X shows multiplier and final $; Y shows count."
+#| label: full-tables
+#| tbl-cap: "Distribution statistics for the 100% strategy (100 simulated lifetimes)."
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
-from numpy import exp, log as ln
+summary_full_df = pd.DataFrame({
+    "Statistic": [
+        "Count",
+        "Mean final balance",
+        "Median final balance",
+        "Minimum",
+        "Maximum",
+        "Standard deviation",
+        "P(final ≥ $30,000)"
+    ],
+    "Value": [
+        f"{stats_full['count']}",
+        f"${stats_full['mean']:,.2f}",
+        f"${stats_full['median']:,.2f}",
+        f"${stats_full['minimum']:,.2f}",
+        f"${stats_full['maximum']:,.2f}",
+        f"${stats_full['std']:,.2f}",
+        f"{p_above_full:0.3f} ({p_above_full*100:0.1f}%)"
+    ]
+})
 
-# ---------- Simulation (ages 30→75)
-S0, p, up, dn = 30000, 0.5, 0.50, -0.40
-years = 75 - 30
-rng = np.random.default_rng(7)
+levels = [10, 25, 50, 75, 90]
+percentiles_full = np.percentile(finals_full, levels)
 
-def simulate_final(S0, years, p, up, dn, rng):
-    S = S0
-    for _ in range(years):
-        S *= (1 + (up if rng.random() < p else dn))
-    return S
+percentile_full_df = pd.DataFrame({
+    "Percentile": [f"{p}th" for p in levels],
+    "Final balance ($)": [f"${v:,.2f}" for v in percentiles_full]
+})
 
-n_sims = 100
-finals = np.array([simulate_final(S0, years, p, up, dn, rng) for _ in range(n_sims)])
-g = np.log(finals / S0)  # log-growth so 0 = break-even
+styled_summary = (
+    summary_full_df
+    .style
+    .hide(axis="index")
+    .set_table_styles([
+        {"selector": "th",
+         "props": [("background-color", "#1976d2"),
+                   ("color", "white"),
+                   ("font-weight", "bold"),
+                   ("padding", "6px")]},
+        {"selector": "tbody td",
+         "props": [("padding", "6px")]},
+    ])
+)
 
-# ---------- Stats
-prob_above = (g > 0).mean()
-mean_g     = g.mean()
-median_g   = np.median(g)
-q25, q75   = np.percentile(g, [25, 75])
+styled_percentiles = (
+    percentile_full_df
+    .style
+    .hide(axis="index")
+    .set_table_styles([
+        {"selector": "th",
+         "props": [("background-color", "#2e7d32"),
+                   ("color", "white"),
+                   ("font-weight", "bold"),
+                   ("padding", "6px")]},
+        {"selector": "tbody td",
+         "props": [("padding", "6px")]},
+        {"selector": "tbody tr:nth-child(even)",
+         "props": [("background-color", "#f5f5f5")]},
+    ])
+)
 
-# ---------- Binning (multi-bar)
-bins = 16
-counts, edges = np.histogram(g, bins=bins)
-centers = 0.5*(edges[:-1] + edges[1:])
-widths  = edges[1:] - edges[:-1]
-
-# ---------- Figure (vivid dark)
-fig, ax = plt.subplots(figsize=(10,5.2), facecolor="#0b1220")
-ax.set_facecolor("#0b1220")
-
-# Zones & IQR band
-ax.axvspan(g.min(), 0, color="#7f1d1d", alpha=0.12, zorder=0)  # loss zone (left of break-even)
-ax.axvspan(0, g.max(), color="#064e3b", alpha=0.12, zorder=0)  # gain zone (right of break-even)
-ax.axvspan(q25, q75,   color="#6b7280", alpha=0.18, zorder=0)  # middle 50%
-
-# Bars (multiple, clear)
-for c, x, w in zip(counts, centers, widths):
-    if c == 0: 
-        continue
-    bar_color = "#fb7185" if x < 0 else "#60a5fa"   # red-ish for loss, blue-ish for gain
-    ax.bar(x, c, width=w*0.94, align='center',
-           color=bar_color, edgecolor="#ffffff", linewidth=0.7, alpha=0.95)
-
-# Glowing break-even (g=0)
-glow = [pe.withStroke(linewidth=8, foreground="#22d3ee", alpha=0.45)]
-ax.axvline(0, ls='--', lw=1.8, color="#22d3ee", path_effects=glow, label="Break even (×1.00 = $30k)")
-
-# Mean / Median lines
-ax.axvline(mean_g,   color="#e5e7eb", lw=1.2, label=f"Mean = {mean_g:+.2f}")
-ax.axvline(median_g, color="#a1a1aa", lw=1.2, ls="--", label=f"Median = {median_g:+.2f}")
-
-# Smooth guide (KDE scaled to bar height)
-grid = np.linspace(edges[0], edges[-1], 500)
-band = max(1e-3, 1.06*np.std(g)*(len(g)**(-1/5)))
-kde = np.zeros_like(grid)
-for v in g:
-    kde += np.exp(-0.5*((grid - v)/band)**2)
-kde /= (len(g)*band*np.sqrt(2*np.pi))
-scale = (counts.max() or 1) / (kde.max() + 1e-9)
-ax.plot(grid, kde*scale, color="#f8fafc", lw=2.2, alpha=0.9, label="Smoothed shape")
-
-# ---------- Title & axes (clear)
-ax.set_title("Final Growth", color="#ffffff", pad=10)
-ax.set_ylabel("Count", color="#e5e7eb")
-
-# X ticks show multiplier (top) + final $ (bottom)
-xticks = np.linspace(g.min(), g.max(), 7)
-ax.set_xticks(xticks)
-labels = []
-for val in xticks:
-    mult  = exp(val)
-    money = mult * S0
-    labels.append(f"×{mult:.2f}\n${max(money,0)/1000:.0f}k")
-ax.set_xticklabels(labels, color="#e5e7eb")
-
-# X-axis note (explains that 0 = break-even)
-ax.set_xlabel("Growth multiplier ×  and final value ($)  —  (0 here = break-even)", color="#e5e7eb")
-
-# Cosmetics
-ax.tick_params(colors="#cbd5e1")
-ax.grid(alpha=0.20, color="#64748b")
-ax.legend(loc="upper left", fontsize=8, framealpha=0.20,
-          facecolor="#0b1220", edgecolor="#334155", labelcolor="#e5e7eb")
-
-# Probability box
-ax.text(0.98, 0.95,
-        f"P(> $30k) = {prob_above:.3f}",
-        transform=ax.transAxes, ha="right", va="top",
-        color="#e5e7eb",
-        bbox=dict(boxstyle="round,pad=0.45", fc="#0b1220", ec="#22d3ee", alpha=0.9))
-
-plt.tight_layout()
-plt.show()
+styled_summary, styled_percentiles
 ```
 
-### 4) Probability Balance > $30,000 at Age 75 (Original Game)
-
-**What the simulation shows:**  
-- The **bright blue line** represents the **average account balance** across 1000 independent runs.  
-- The **shaded areas** show the **spread of results** — the darker band (25th–75th percentile) captures typical outcomes, while the lighter band (10th–90th percentile) includes almost all runs.  
-- Most runs stay **below the $30 000 line**, meaning the game’s outcomes are **generally negative**.  
-- Only a few simulations rise well above the buy-in, showing that **big wins are rare**.
-
+## 4) Probability that the balance exceeds $30,000 at age 75
 
 ```{python}
-#| label: q4-monte-carlo
-#| echo: false
-#| fig-cap: "Monte Carlo Simulation (1 000 runs, Ages 30→75): vivid dark theme showing average trend and variability"
+#| label: prob-table
+#| tbl-cap: "Probability that the final balance is at or above $30,000 under the 100% strategy."
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
+n_success = int((finals_full >= target_balance).sum())
 
-# --- parameters
-S0, p, up, dn = 30000, 0.5, 0.5, -0.4
-years = 75 - 30
-n_sims = 1000
-rng = np.random.default_rng(123)
+prob_df = pd.DataFrame({
+    "Metric": [
+        "Number of simulations",
+        "Number of coin flips per simulation",
+        "Simulations with final balance ≥ $30,000",
+        "Probability (decimal)",
+        "Probability (percentage)",
+        "Probability (final balance < $30,000)"
+    ],
+    "Value": [
+        f"{n_runs}",
+        f"{n_years}",
+        f"{n_success}",
+        f"{p_above_full:0.3f}",
+        f"{p_above_full*100:0.1f}%",
+        f"{1 - p_above_full:0.3f} ({(1 - p_above_full)*100:0.1f}%)"
+    ]
+})
 
-# --- run simulations
-paths = np.zeros((n_sims, years+1))
-for i in range(n_sims):
-    S = S0
-    paths[i,0] = S
-    for t in range(1, years+1):
-        S *= (1 + (up if rng.random() < p else dn))
-        paths[i,t] = S
+styled_prob = (
+    prob_df
+    .style
+    .hide(axis="index")
+    .set_table_styles([
+        {"selector": "th",
+         "props": [("background-color", "#c62828"),
+                   ("color", "white"),
+                   ("font-weight", "bold"),
+                   ("padding", "6px")]},
+        {"selector": "tbody td",
+         "props": [("padding", "6px")]},
+        {"selector": "tbody tr:nth-child(even)",
+         "props": [("background-color", "#ffebee")]},
+    ])
+)
 
-avg_path = paths.mean(axis=0)
-p10, p90 = np.percentile(paths, [10, 90], axis=0)
-p25, p75 = np.percentile(paths, [25, 75], axis=0)
-
-# --- vivid dark plot
-fig, ax = plt.subplots(figsize=(10,5), facecolor="#0b1220")
-ax.set_facecolor("#0b1220")
-
-t = np.arange(30, 76)
-
-# Shaded bands
-ax.fill_between(t, p10, p90, color="#22d3ee", alpha=0.08, label="10th–90th percentile")
-ax.fill_between(t, p25, p75, color="#22d3ee", alpha=0.15, label="25th–75th percentile")
-
-# Average line
-ax.plot(t, avg_path, color="#38bdf8", lw=2.5, label="Average path")
-
-# Break-even line
-glow = [pe.withStroke(linewidth=8, foreground="#22d3ee", alpha=0.45)]
-ax.axhline(S0, ls="--", lw=1.6, color="#22d3ee", path_effects=glow, label="Buy-in $30 000")
-
-# Labels, grid, legend
-ax.set_title("Final Growth Monte Carlo Summary", color="#ffffff", pad=10)
-ax.set_xlabel("Age (years)", color="#e5e7eb")
-ax.set_ylabel("Account Balance ($)", color="#e5e7eb")
-ax.tick_params(colors="#cbd5e1")
-ax.grid(alpha=0.22, color="#64748b")
-ax.legend(loc="upper left", fontsize=8, framealpha=0.2,
-          facecolor="#0b1220", edgecolor="#334155", labelcolor="#e5e7eb")
-
-plt.tight_layout()
-plt.show()
-
+styled_prob
 ```
-**Interpretation:**  
-- The **median growth is negative**, showing that losses are more common than gains.  
-- The **average** appears slightly higher due to a few **large wins**, but this is misleading since most paths lose money.  
-- This simulation highlights how **risk and volatility dominate** — your expected return is poor, and your chance of breaking even is small.
 
-### **Balance Summary — Monte Carlo (1000 Runs)**
+This table reports the estimate of \(P(\text{final balance} \ge 30{,}000)\) directly from the simulations, without repeating the number again in the surrounding text.
 
-| **Metric** | **Description** | **Result / Observation** |
-|:------------|:----------------|:-------------------------|
-| **Buy-in** | Starting balance | \$30 000 |
-| **Mean final balance** | Average of all 1 000 simulated runs | ≈ \$28 000 – \$30 000 |
-| **Median final balance** | Typical (middle) outcome | Below \$30 000 |
-| **Chance of breaking even (≥ \$30 000)** | Probability of a “happy” result | ~ 25 % |
-| **Takeaway** | Interpretation of results | Even after 1000 simulations, most paths lose money. A few large wins raise the average, but they don’t offset the high risk and low consistency. |
-
-
-### 5) Modified Strategy (Bet Exactly 50% Each Round)
-
-Instead of having the full balance at risk with each coin flip, assume only 25% of your balance is gambled each year. Compare this to the original game. Which is riskier? Which has better upside?
+## 5) Modified strategy – bet 25% of the balance each year
 
 ```{python}
-#| label: q5-modified-50pct-py
-#| echo: true
-#| fig-cap: "Modified strategy distribution (bet 50% each round)"
+#| label: sims-frac
+#| include: false
 
-# TODO: Implement the modified game
-# - Run 100 simulations; plot distribution of final balances
-# - Estimate P(final > 30000) and compare to original
-# - visually compare the outcome distributions of the original and modified strategies
+rng_frac = np.random.default_rng(456)
+finals_frac = np.array([simulate_final_frac(rng_frac, n_years, initial_balance)
+                        for _ in range(n_runs)])
 
+stats_frac = summarize_array(finals_frac)
+p_above_frac = (finals_frac >= target_balance).mean()
+
+log_frac = np.log(finals_frac)
+mu_frac = log_frac.mean()
+sigma_frac = log_frac.std(ddof=0)
 ```
 
-### 6) Briefly Explain Your Findings From The Previous Step in Light of A Concept Known as the "Kelly Criterion"
- 
-What is the Kelly Criterion and how does it relate to the modified strategy?
+```{python}
+#| label: overlay-hist
+#| fig-cap: "Final balances under the 100% and 25% strategies (log scale, 100 runs each)."
+#| fig-width: 8
+#| fig-height: 4.8
+#| out-width: "100%"
 
+fig, ax = plt.subplots(figsize=(8, 4.8))
 
-## Professional Presentation (From Grading TLDR)
+min_all = min(finals_full.min(), finals_frac.min())
+max_all = max(finals_full.max(), finals_frac.max())
+bins_overlay = np.logspace(np.log10(min_all*0.8), np.log10(max_all*1.2), 24)
 
-- **Clear narrative:** tell the story succinctly (aim for a 1–5 minute read)
-- **Focus on insights:** risk profiles, counter-intuitive results, practical implications
-- **Professional style:** concise writing, clean visuals, hide code where appropriate (`echo: false`)
-- **Human interpretation:** explain what results mean for real decisions
+ax.hist(
+    finals_full,
+    bins=bins_overlay,
+    alpha=0.55,
+    color="#ff8a80",
+    edgecolor="white",
+    label="100% each year",
+)
+ax.hist(
+    finals_frac,
+    bins=bins_overlay,
+    alpha=0.65,
+    color="#80cbc4",
+    edgecolor="white",
+    label="25% each year",
+)
 
-## Submission Checklist ✅
+ax.axvline(target_balance, color="#40c4ff", linestyle="--", lw=2, label="Buy-in $30k")
 
-- [ ] Quarto document written with narrative and results
-- [ ] Rendered to HTML successfully
-- [ ] Repository `simulationChallenge` created on GitHub
-- [ ] HTML committed and pushed
-- [ ] GitHub Pages enabled (Deploy from a branch → main → /(root))
-- [ ] Site accessible at `https://[your-username].github.io/simulationChallenge/`
+x_overlay = np.logspace(np.log10(min_all*0.8), np.log10(max_all*1.4), 800)
 
-## Tips
+log_pdf_full = (1.0 / (x_overlay * sigma_full * np.sqrt(2*np.pi))) *                np.exp(-0.5 * ((np.log(x_overlay) - mu_full) / sigma_full)**2)
+log_pdf_frac = (1.0 / (x_overlay * sigma_frac * np.sqrt(2*np.pi))) *                np.exp(-0.5 * ((np.log(x_overlay) - mu_frac) / sigma_frac)**2)
 
-- Set random seeds for reproducibility
-- Use object-oriented plotting with `matplotlib`
-- Keep figures readable and labeled; prefer professional styling
-- Commit early and often; render locally before pushing
+scale_full = ax.get_ylim()[1] / max(log_pdf_full.max(), 1e-6)
+scale_frac = ax.get_ylim()[1] / max(log_pdf_frac.max(), 1e-6)
 
+ax.plot(x_overlay, log_pdf_full * scale_full, color="#ff5252", lw=1.8, label="Log-normal (100%)")
+ax.plot(x_overlay, log_pdf_frac * scale_frac, color="#26a69a", lw=1.8, label="Log-normal (25%)")
+
+ax.set_xscale("log")
+ax.set_xlabel("Final balance ($, log scale)")
+ax.set_ylabel("Number of simulations")
+ax.set_title("Distribution of Final Balances: Full-Stake vs 25%-Stake")
+ax.grid(True, which="both", linestyle="--", alpha=0.35)
+ax.legend(loc="upper left", framealpha=0.85)
+fig.tight_layout()
+```
+
+### Side-by-side strategy comparison
+
+```{python}
+#| label: compare-tables
+#| tbl-cap: "Comparison of the 100% and 25% strategies over 100 simulated lifetimes."
+
+compare_df = pd.DataFrame({
+    "Statistic": [
+        "P(final ≥ $30,000)",
+        "Mean final balance",
+        "Median final balance",
+        "Standard deviation",
+        "Minimum",
+        "Maximum"
+    ],
+    "100% each year": [
+        f"{p_above_full:0.3f} ({p_above_full*100:0.1f}%)",
+        f"${stats_full['mean']:,.2f}",
+        f"${stats_full['median']:,.2f}",
+        f"${stats_full['std']:,.2f}",
+        f"${stats_full['minimum']:,.2f}",
+        f"${stats_full['maximum']:,.2f}",
+    ],
+    "25% each year": [
+        f"{p_above_frac:0.3f} ({p_above_frac*100:0.1f}%)",
+        f"${stats_frac['mean']:,.2f}",
+        f"${stats_frac['median']:,.2f}",
+        f"${stats_frac['std']:,.2f}",
+        f"${stats_frac['minimum']:,.2f}",
+        f"${stats_frac['maximum']:,.2f}",
+    ]
+})
+
+styled_compare = (
+    compare_df
+    .style
+    .hide(axis="index")
+    .set_table_styles([
+        {"selector": "th",
+         "props": [("background-color", "#455a64"),
+                   ("color", "white"),
+                   ("font-weight", "bold"),
+                   ("padding", "6px")]},
+        {"selector": "tbody td",
+         "props": [("padding", "6px")]},
+        {"selector": "tbody tr:nth-child(even)",
+         "props": [("background-color", "#eceff1")]},
+    ])
+)
+
+styled_compare
+```
+
+## 6) Kelly-style reflection
+
+::: callout-tip
+#### Kelly perspective
+
+The Kelly Criterion describes how much of a bankroll to stake on a favorable bet when the goal is long-run (geometric) growth.  
+
+For this game (50% chance of +50%, 50% chance of −40%), the Kelly fraction comes out close to **25%** of the account per flip.
+:::
+
+The simulations match that idea:
+
+- The **100% strategy** sits far above Kelly. It generates a few spectacular wins and many retirements that end below the original $30,000.  
+- The **25% strategy** is closer to Kelly. It raises the chance of finishing ahead, pushes the median above $30,000, and reduces the worst outcomes.
+
+Over the horizon from age 30 to 75, the fractional strategy offers a better balance between growth and protection.
